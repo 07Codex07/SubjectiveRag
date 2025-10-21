@@ -1,0 +1,7 @@
+requests
+beautifulsoup4
+serpapi
+rank-bm25
+groq
+python-dotenv
+tqdm
