@@ -26,23 +26,7 @@ You can ask it about **valuation ratios (P/E, P/B, EPS Growth, etc.)**, **analys
 ## 🧱 Folder Structure
 
 
-subjective_rag/
-│
-├── scripts/
-│ ├── run_subjective_rag.py # Main entry point — orchestrates the pipeline
-│ ├── fetch_and_scrape.py # Intelligent web scraper (SerpAPI + CloudScraper)
-│ ├── retriever.py # BM25 / FAISS-based document retriever
-│ ├── analyzer.py # LLM-powered subjective analysis generator
-│ └── utils.py # Helper functions (chunking, logging, etc.)
-│
-├── data/
-│ ├── cache/ # Stores cached scraped pages (md5-hash filenames)
-│ └── outputs/ # Stores generated reports
-│
-├── .env # Environment variables (Groq & SerpAPI keys)
-├── requirements.txt # All dependencies
-├── .gitignore # Ignore cache, venv, and temp files
-└── README.md # This file
+<img width="755" height="612" alt="image" src="https://github.com/user-attachments/assets/698934b0-50bb-4d22-9616-c0423a1601d7" />
 
 
 ---
