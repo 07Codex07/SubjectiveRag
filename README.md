@@ -1,124 +1,322 @@
-# 🧠 SubjectiveRAG — AI-Driven Financial Research Assistant  
-*Built by Vinayak · Powered by Groq, SerpAPI & CloudScraper*
+# README – Subjective RAG System
+
+## 📌 Overview
+
+This project implements a next-generation subjectivity-aware RAG pipeline designed to answer investment-style questions such as:
+
+- "Should I buy HDFC Bank stock right now?"
+- "Is Tesla a good long-term investment?"
+
+The system performs:
+- SERP-powered web search  
+- Robust scraping (HTML/PDF/images/JS-rendered pages)  
+- Chunking + BM25 ranking  
+- Worker LLM analysis generation  
+- Checker LLM consistency verification  
+- Deterministic claim verification against sources  
+- Automatic logging of each query
+
+This ensures answers are objective, auditable, and evidence-backed.
 
 ---
 
-## 🌍 Overview
+## 📂 Project Structure
 
-**SubjectiveRAG** is an AI-powered **financial research and analysis pipeline** that automatically searches the web for the latest company financials, extracts clean text from multiple data sources, and produces a **human-style research report** — just like a professional stock analyst.
+<img width="384" height="637" alt="image" src="https://github.com/user-attachments/assets/110e3760-0040-4de6-a91a-6b5997ead09d" />
 
-The project blends **Retrieval-Augmented Generation (RAG)** with intelligent web scraping, using tools like **SerpAPI, CloudScraper, BeautifulSoup, and LangChain**.  
-You can ask it about **valuation ratios (P/E, P/B, EPS Growth, etc.)**, **analyst upgrades/downgrades**, or even **financial surprises** for any listed company, and it will give you a structured, explainable summary.
-
----
-
-## 💡 What Makes SubjectiveRAG Special
-
-✅ **Human-style financial commentary** — reports read like an analyst wrote them  
-✅ **Real-time data retrieval** — uses SerpAPI and scrapers to get the freshest info  
-✅ **Cleans & caches data** — smart caching to avoid refetching pages  
-✅ **Automatic retry and Cloudflare bypass** — powered by CloudScraper  
-✅ **PDF + HTML + Newspaper3k fallback** — handles most financial document formats  
-✅ **Modular RAG pipeline** — plug in your favorite LLM or retriever easily  
-
----
-
-## 🧱 Folder Structure
-
-
-<img width="755" height="612" alt="image" src="https://github.com/user-attachments/assets/698934b0-50bb-4d22-9616-c0423a1601d7" />
 
 
 ---
 
-## ⚙️ Installation & Setup
+## 🔍 1. Web Search Layer (`web_search.py`)
 
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/<your-username>/subjective_rag.git
-cd subjective_rag
-```
+Uses SerpAPI to fetch top Google results.
 
-2️⃣ Create and Activate a Virtual Environment
-python -m venv venv
-# On Windows
-venv\Scripts\activate
-# On macOS/Linux
-source venv/bin/activate
+Features:
+- Extracts organic results
+- Removes duplicates
+- Returns top N URLs based on search query
 
-3️⃣ Install Dependencies
-pip install -r requirements.txt
+Usage:
 
-4️⃣ Configure Environment Variables
-
-Create a file named .env in the project root with the following contents:
-
-GROQ_API_KEY=your_groq_api_key_here
-SERPAPI_KEY=your_serpapi_key_here
-USER_AGENT=MyResearchBot/1.0 (contact: your_email@example.com)
+urls = search_web("should I buy Tata Motors stock?", num_results=8)
 
 
-💡 Tip:
-You can get a free SerpAPI key at https://serpapi.com
+🌐 3. Fetching & Scraping Layer (fetch_and_scrape.py)
 
-🚀 Running SubjectiveRAG
+Primary scraper used by the RAG pipeline.
 
-Once installed and configured:
+Capabilities:
 
-python -m scripts.run_subjective_rag
+Cloudflare/bot bypass with cloudscraper
 
+Random delays + User-Agent rotation
 
-You’ll see:
+Local caching for speed
 
-Enter topic:
+Visible HTML text extraction
 
+PDF extraction
 
-You can enter any query such as:
+Newspaper3k fallback
 
-P/E & P/B Multiples, EPS / Revenue Growth, EBITDA Margin, Debt/EBITDA Ratio, Dividend Yield, Analyst Upgrade/Downgrade of Tata Motors
+Financial table extraction
 
+Automatic Yahoo Finance scraping (Market cap, PE ratio, revenue growth, EBITDA margin, financial statements)
 
-The system will:
+Flow:
 
-1)Search the web using SerpAPIFetch 5–10 relevant pages
-2)Fetch 5–10 relevant pages
-3)Scrape text (with CloudScraper + fallback)
-4)Store the cleaned text in data/cache/
-5)Use BM25 / FAISS retrieval to chunk relevant info
-6)Generate a full analyst-style report via Groq API
+Check cache
 
-# Example Output
+Requests + cloudscraper
 
-🔍 Searching web for: P/E & P/B Multiples, EPS / Revenue Growth, EBITDA Margin, Debt/EBITDA Ratio, Dividend Yield, Analyst Upgrade/Downgrade of Tata Motors
+Detect PDF and extract
 
-Found 5 sources.
-Fetching and scraping...
-...
-🧠 Generating analysis...
+Extract tables + text
 
-**Tata Motors: A Comprehensive Analysis**
+Fallback to newspaper3k
 
-As a research analyst, I have gathered insights from various sources to provide a balanced analysis of Tata Motors...
+Save cleaned text in cache
 
-**Key Strengths**
-1. Reduced Debt
-2. Good Profit Growth
-3. Strong ROE
-...
+🌐 3. Universal Scraper (universal_scraper.py)
 
-**Valuation Metrics**
-- P/E Ratio: 6.89
-- Price/Book: 1.26
-- Debt/Equity: 0.23
+ A heavy-duty scraper with multiple fallbacks.
 
-**Conclusion**
-Tata Motors is a well-established player in the automobile industry...
+Fetching strategies:
 
-**Recommendation:** HOLD with potential upside of 15%.
+requests
 
-# Example of .env file
-```
-GROQ_API_KEY=groq_xxx
-SERPAPI_KEY=serpapi_xxx
-USER_AGENT=MyResearchBot/1.0 (contact: vinayak@example.com)
-```
+cloudscraper
+
+Playwright (headless browser for JS-rendered content)
+
+Extraction capabilities:
+
+Metadata extraction
+
+Text extraction
+
+Images + OCR (Tesseract)
+
+Tables via Pandas
+
+PDF extraction via pdfplumber
+
+JSON-LD extraction
+
+Chart/config extraction from scripts
+
+XHR API capture in Playwright
+
+Outputs:
+{
+"url": "",
+"raw_html": "",
+"text": "",
+"metadata": {},
+"tables": [],
+"images": [],
+"charts": [],
+"captured_xhr": []
+}
+
+🧠 4. Orchestrator Pipeline (run_subjective_rag.py)
+
+Run using:
+python scripts/run_subjective_rag.py "should I buy HDFC Bank stock now?"
+
+Pipeline Steps:
+
+Query Classification
+Routes queries based on detected domain:
+
+finance
+
+crypto
+
+news
+
+general
+
+Web Search
+Uses SerpAPI → fetches up to 8 URLs → filters by whitelisted domains.
+
+Scraping
+Uses fetch_and_scrape to scrape each URL.
+
+Chunking + BM25 Ranking
+
+Splits text into chunks
+
+Dedupes
+
+Ranks using BM25
+
+Selects top 5 chunks as evidence
+
+Worker LLM (analysis generator)
+Outputs:
+
+Final answer
+
+List of claims with:
+
+claim text
+
+evidence snippet
+
+source URL
+
+Checker LLM (validation agent)
+Ensures:
+
+Logical consistency
+
+No fabricated facts
+
+Sources match claims
+
+Deterministic Claim Verification
+Independent rule-based system (non-LLM):
+
+Checks if each claim exists verbatim in sources
+
+Flags missing or hallucinated claims
+
+Scoring
+
+claim_precision
+
+hallucination_rate
+
+Final Output Logic
+If:
+
+checker says VALID
+
+claim_precision ≥ 0.9
+
+Then:
+final_answer = worker answer
+
+Else (safe fallback):
+
+worker answer
+
+verifier notes
+
+claim evidence mismatch report
+
+Logging
+Stored in:
+data/logs/log_<timestamp>.jsonl
+
+🛡️ 5. Deterministic Claim Verifier (claim_verifier.py)
+
+Checks claims from Worker LLM against scraped sources.
+
+Process:
+
+Normalize all text
+
+Search for exact claim string in scraped data
+
+Mark as VALID or INVALID
+
+Create evidence excerpts
+
+Compute metrics
+
+Outputs:
+
+verification list
+
+metrics
+
+claim_precision
+
+hallucination_rate
+
+valid_claims
+
+total_claims
+
+📊 Evidence Tracking
+
+Each source is formatted as:
+
+SOURCE_URL: ...
+SOURCE_TEXT:
+...extracted content...
+<<END_SOURCE>>
+
+Both Worker and Checker LLMs receive these identical evidence blocks.
+
+🗄️ Caching System
+
+All scraped pages are cached in:
+data/cache/
+
+Prevents repeated scraping and reduces latency.
+
+📜 Logging System
+
+Logs include:
+
+query
+
+URLs
+
+top chunks
+
+worker output
+
+checker output
+
+deterministic verification
+
+scoring
+
+Stored as .jsonl files for auditing.
+
+🚀 Running the System
+
+python scripts/run_subjective_rag.py "should I buy Infosys stock?"
+
+Outputs:
+
+Classification
+
+URLs used
+
+Scraper logs
+
+Ranked chunks
+
+Worker answer
+
+Checker evaluation
+
+Verification metrics
+
+Final answer
+
+📌 Future Extensions
+
+Possible upgrades:
+
+Real-time price feeds
+
+Sentiment scoring
+
+Multi-agent analysis
+
+Vector DB for historical queries
+
+Dashboard visualization
+
+Playbook templates per industry
+
+👤 Author
+
+Vinayak — AI/ML Engineer
